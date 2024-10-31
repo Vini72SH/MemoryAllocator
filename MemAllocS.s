@@ -14,8 +14,8 @@ iniciaAlocador:
     movq %rsp, %rbp     # Altera o RA corrente.
     subq $8, %rsp       # Espaço para o ponteiro topo.
 
-    # movq $str1, %rdi    # Carregamento da String.
-    # call printf         # Chamada do printf.
+    movq $str1, %rdi    # Carregamento da String.
+    call printf         # Chamada do printf.
 
     movq $12, %rax
     movq $0, %rdi       # Recebe o endereço do topo da pilha.
@@ -44,21 +44,6 @@ alocaMem:
     pushq %rbp
     movq %rsp, %rbp
     subq $72, %rsp
-
-    movq $0, %rax
-    movq $0, %rbx
-    movq $0, %rcx
-    movq $0, %rdx
-    movq $0, %rsi
-    movq $0, %rdi
-    movq $0, %r8
-    movq $0, %r9
-    movq $0, %r10
-    movq $0, %r11
-    movq $0, %r12
-    movq $0, %r13
-    movq $0, %r14
-    movq $0, %r15
 
     movq $4096, -8(%rbp)    # i = 4096
     movq $0, %rdi
@@ -227,8 +212,8 @@ finalizaAlocador:
     movq $12, %rax      # Contido em topoInicialHeap.
     syscall
 
-    # movq $str3, %rdi
-    # call printf
+    movq $str3, %rdi
+    call printf
 
     popq %rbp           # Restaura o antigo RA.
     ret                 # Retorna o fluxo do programa.
