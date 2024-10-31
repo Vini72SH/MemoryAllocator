@@ -40,10 +40,11 @@ alocaMem:
     # tamanhoBloco -> -56(%rbp)
     # basePointer -> -64(%rbp)
     # verificador -> -72(%rbp)
+    # diff -> -80(%rbp)
 
     pushq %rbp
     movq %rsp, %rbp
-    subq $72, %rsp
+    subq $80, %rsp
 
     movq $4096, -8(%rbp)    # i = 4096
     movq $0, %rdi
@@ -122,6 +123,23 @@ alocaMem:
     movq %rbx, -48(%rbp)
     movq %rcx, -56(%rbp)
     movq %rdx, -64(%rbp)
+    movq (%rcx), %rax       # %rax = *tamanhoBloco
+    movq 16(%rbp), %rbx     # %rbx = num_bytes
+    subq %rbx, %rax         # %rax = *tamanhoBloco - num_bytes
+    subq $16, %rax          # %rax = *tamanhoBloco - num_bytes - 16
+    movq %rax, -80(%rbp)
+    cmpq $16, %rax          # diff > 2 * sizeof(long int)
+    jle fim_else2
+
+    movq -56(%rbp), %rcx    # %rcx = tamanhoBloco
+    movq %rbx, (%rcx)       # (*tamanhoBloco) = num_bytes
+    movq -64(%rbp), %rax    # %rax = basePointer
+    addq %rbx, %rax         # %rax = basePointer + num_bytes
+    movq $0, (%rax)         # (*proxBlocoValido) = 0
+    addq $8, %rax
+    movq -80(%rbp), %rbx
+    movq %rbx, (%rax)       # (*proxBlocoTamanho) = diff
+
     jmp fim_else2
     else_2:
     movq -32(%rbp), %rax    # %rax = novoBloco
@@ -164,7 +182,7 @@ alocaMem:
     movq $str2, %rdi        # Mensagem de erro.
     call printf
     movq $0, %rdi
-    addq $72, %rsp          # Desaloca as variáveis locais.
+    addq $80, %rsp          # Desaloca as variáveis locais.
     popq %rbp               # Restaura o antigo RA.
     ret                     # Retorna o fluxo do programa.
     fim_if5:
@@ -175,7 +193,7 @@ alocaMem:
     movq %r10, ultimoBloco
     fim_else2:
     movq -64(%rbp), %rax    # retorna o basePointer
-    addq $72, %rsp          # Desaloca as variáveis locais.
+    addq $80, %rsp          # Desaloca as variáveis locais.
     popq %rbp               # Restaura o antigo RA.
     ret                     # Retorna o fluxo do programa.
 
@@ -221,21 +239,42 @@ finalizaAlocador:
 main:
     pushq %rbp
     movq %rsp, %rbp
-    subq $8, %rsp
+    subq $24, %rsp
 
     call iniciaAlocador
 
-    pushq $8
+    pushq $100
     call alocaMem
     addq $8, %rsp
     movq %rax, -8(%rbp)
 
+    movq -8(%rbp), %rax
+    pushq %rax
+    call liberaMem
+    addq $8, %rsp
+
+    pushq $50
+    call alocaMem
+    addq $8, %rsp
+    movq %rax, -16(%rbp)
+
+    pushq $34
+    call alocaMem
+    addq $8, %rsp
+    movq %rax, -24(%rbp)
+
+    movq -16(%rbp), %rax
+    pushq %rax
+    call liberaMem
+    addq $8, %rsp
+
+    movq -24(%rbp), %rax
     pushq %rax
     call liberaMem
     addq $8, %rsp
 
     call finalizaAlocador
 
-    addq $8, %rsp
+    addq $24, %rsp
     movq $60, %rax
     syscall

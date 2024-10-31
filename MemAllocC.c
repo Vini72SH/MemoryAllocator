@@ -50,8 +50,8 @@ int liberaMem(void *bloco) {
  */
 void *alocaMem(long int num_bytes) {
     
-    int i, melhorTamanho;
-    long int *topo, *novoBloco, *melhorBloco;
+    int i, melhorTamanho, diff;
+    long int *topo, *novoBloco, *melhorBloco, *saltPointer;
     long int *valido, *tamanhoBloco, *basePointer, *verificador;
 
     i = 4096;
@@ -86,6 +86,14 @@ void *alocaMem(long int num_bytes) {
         tamanhoBloco = (long int *)((char *)melhorBloco + sizeof(long int));
         basePointer = (long int *)((char *)melhorBloco + 2 * sizeof(long int));
         (*valido) = 1;
+        diff = ((*tamanhoBloco) - num_bytes - 2 * sizeof(long int));
+        if (diff > 2 * sizeof(long int)) {
+            (*tamanhoBloco) = num_bytes;
+            saltPointer = (long int *)((char *)basePointer + num_bytes);
+            (*saltPointer) = 0;
+            saltPointer = (long int *)((char *)saltPointer + sizeof(long int));
+            (*saltPointer) = diff;
+        }
     } else {
         valido = (long int *)novoBloco;
         tamanhoBloco = (long int *)((char *)novoBloco + sizeof(long int));
@@ -117,41 +125,34 @@ int main () {
     iniciaAlocador();
     printf("Topo da Heap: %p\n\n", topoInicialHeap);
 
-    x = (long int *)alocaMem(100 * sizeof(long int));
+    x = alocaMem(100);
     if (x != NULL) {
-        for (int i = 0; i < 100; i++) {
-            x[i] = (i + 1) * (i + 1);
-        }
-
-        for (int i = 0; i < 100; i++) {
-            printf("[%d] = %ld\n", i + 1, x[i]);
-        }
+        *x = 5;
+        printf("[%p]: %ld\n", x, *x);
     }
     liberaMem(x);
 
-    /*for (int i = 1; i < 11; ++i) {
-        x = (long int *)alocaMem(i * sizeof(long int));
-        if (x != NULL) {
-            *x = i;
-            printf("End X: [%p] ", x);
-            printf("Valid: %ld ", *((long int*)((char *)x - 16)));
-            printf("Tam: %ld ", *((long int*)((char *)x - 8)));
-            printf("Data: %ld ", *x);
-            printf("Diferença em Bytes: %ld\n\n", (char *)x - (char *)topoInicialHeap);
-        }
-        liberaMem(x);
+    y = alocaMem(50);
+    if (y != NULL) {
+        *y = 10;
+        printf("[%p]: %ld\n", y, *y);
+    }    
+
+    z = alocaMem(34);
+    if (z != NULL) {
+        *z = 20;
+        printf("[%p]: %ld\n", z, *z);
     }
 
-    x = (long int *)alocaMem(4096);
+    liberaMem(y);
+    liberaMem(z);
+
+    x = alocaMem(100);
     if (x != NULL) {
-        *x = 4096;
-        printf("End X: [%p] ", x);
-        printf("Valid: %ld ", *((long int*)((char *)x - 16)));
-        printf("Tam: %ld ", *((long int*)((char *)x - 8)));
-        printf("Data: %ld ", *x);
-        printf("Diferença em Bytes: %ld\n\n", (char *)x - (char *)topoInicialHeap);
+        *x = 5;
+        printf("[%p]: %ld\n", x, *x);
     }
-    liberaMem(x);*/
+    liberaMem(x);
 
     newTop = sbrk(0);
     printf("Diferença em Bytes: %ld\n", (char *)newTop - (char *)topoInicialHeap);
