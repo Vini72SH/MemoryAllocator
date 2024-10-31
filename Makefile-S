@@ -28,4 +28,4 @@ $(EXEC_S_LIBC): %: %.s
 	$(LD) $@.o -o $@ $(LD_FLAGS)
 
 clean:
-	rm -f $(EXECS_S) $(OBJS_S) $(EXEC_S_LIBC)
+	rm -f $(EXECS_S) $(OBJS_S) $(EXEC_S_LIBC) $(OBJS_S_LIBC)
