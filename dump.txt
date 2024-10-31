@@ -1,0 +1,208 @@
+
+MemAllocS: formato do arquivo elf64-x86-64
+
+
+Desmontagem da seção .plt:
+
+0000000000401000 <printf@plt-0x10>:
+  401000:	ff 35 ea 1f 00 00    	push   0x1fea(%rip)        # 402ff0 <_GLOBAL_OFFSET_TABLE_+0x8>
+  401006:	ff 25 ec 1f 00 00    	jmp    *0x1fec(%rip)        # 402ff8 <_GLOBAL_OFFSET_TABLE_+0x10>
+  40100c:	0f 1f 40 00          	nopl   0x0(%rax)
+
+0000000000401010 <printf@plt>:
+  401010:	ff 25 ea 1f 00 00    	jmp    *0x1fea(%rip)        # 403000 <printf@GLIBC_2.2.5>
+  401016:	68 00 00 00 00       	push   $0x0
+  40101b:	e9 e0 ff ff ff       	jmp    401000 <printf@plt-0x10>
+
+Desmontagem da seção .text:
+
+0000000000401020 <iniciaAlocador>:
+  401020:	55                   	push   %rbp
+  401021:	48 89 e5             	mov    %rsp,%rbp
+  401024:	48 83 ec 08          	sub    $0x8,%rsp
+  401028:	48 c7 c7 18 30 40 00 	mov    $0x403018,%rdi
+  40102f:	e8 dc ff ff ff       	call   401010 <printf@plt>
+  401034:	48 c7 c0 0c 00 00 00 	mov    $0xc,%rax
+  40103b:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+  401042:	0f 05                	syscall
+  401044:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+  401048:	48 89 04 25 08 30 40 	mov    %rax,0x403008
+  40104f:	00 
+  401050:	48 89 04 25 10 30 40 	mov    %rax,0x403010
+  401057:	00 
+  401058:	48 83 c4 08          	add    $0x8,%rsp
+  40105c:	5d                   	pop    %rbp
+  40105d:	c3                   	ret
+
+000000000040105e <liberaMem>:
+  40105e:	55                   	push   %rbp
+  40105f:	48 89 e5             	mov    %rsp,%rbp
+  401062:	48 83 ec 08          	sub    $0x8,%rsp
+  401066:	48 8b 45 10          	mov    0x10(%rbp),%rax
+  40106a:	48 83 f8 ff          	cmp    $0xffffffffffffffff,%rax
+  40106e:	74 17                	je     401087 <else>
+  401070:	48 89 c3             	mov    %rax,%rbx
+  401073:	48 83 eb 10          	sub    $0x10,%rbx
+  401077:	48 c7 03 00 00 00 00 	movq   $0x0,(%rbx)
+  40107e:	48 c7 c3 01 00 00 00 	mov    $0x1,%rbx
+  401085:	eb 07                	jmp    40108e <exit>
+
+0000000000401087 <else>:
+  401087:	48 c7 c3 00 00 00 00 	mov    $0x0,%rbx
+
+000000000040108e <exit>:
+  40108e:	48 83 c4 08          	add    $0x8,%rsp
+  401092:	48 89 d8             	mov    %rbx,%rax
+  401095:	5d                   	pop    %rbp
+  401096:	c3                   	ret
+
+0000000000401097 <alocaMem>:
+  401097:	5d                   	pop    %rbp
+  401098:	48 89 e5             	mov    %rsp,%rbp
+  40109b:	48 83 ec 48          	sub    $0x48,%rsp
+  40109f:	48 c7 45 f8 00 10 00 	movq   $0x1000,-0x8(%rbp)
+  4010a6:	00 
+  4010a7:	48 c7 c0 0c 00 00 00 	mov    $0xc,%rax
+  4010ae:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+  4010b5:	0f 05                	syscall
+  4010b7:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
+  4010bb:	48 c7 45 d8 00 00 00 	movq   $0x0,-0x28(%rbp)
+  4010c2:	00 
+  4010c3:	48 8b 04 25 08 30 40 	mov    0x403008,%rax
+  4010ca:	00 
+  4010cb:	48 89 45 e0          	mov    %rax,-0x20(%rbp)
+  4010cf:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+  4010d3:	48 8b 1c 25 10 30 40 	mov    0x403010,%rbx
+  4010da:	00 
+  4010db:	4c 8b 65 10          	mov    0x10(%rbp),%r12
+
+00000000004010df <while>:
+  4010df:	48 39 c3             	cmp    %rax,%rbx
+  4010e2:	7d 75                	jge    401159 <fim_while>
+  4010e4:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+  4010e8:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+  4010ec:	48 89 c3             	mov    %rax,%rbx
+  4010ef:	48 83 c3 08          	add    $0x8,%rbx
+  4010f3:	48 89 5d c8          	mov    %rbx,-0x38(%rbp)
+  4010f7:	48 89 c3             	mov    %rax,%rbx
+  4010fa:	48 83 c3 10          	add    $0x10,%rbx
+  4010fe:	48 89 5d c0          	mov    %rbx,-0x40(%rbp)
+  401102:	4c 8b 45 d0          	mov    -0x30(%rbp),%r8
+  401106:	4d 8b 08             	mov    (%r8),%r9
+  401109:	4c 8b 55 c8          	mov    -0x38(%rbp),%r10
+  40110d:	4d 8b 1a             	mov    (%r10),%r11
+  401110:	4c 8b 6d d8          	mov    -0x28(%rbp),%r13
+  401114:	4c 8b 75 f0          	mov    -0x10(%rbp),%r14
+  401118:	49 83 f9 00          	cmp    $0x0,%r9
+  40111c:	75 2e                	jne    40114c <fim_else>
+  40111e:	4d 39 e3             	cmp    %r12,%r11
+  401121:	7c 29                	jl     40114c <fim_else>
+  401123:	49 83 fd 00          	cmp    $0x0,%r13
+  401127:	75 10                	jne    401139 <else_1>
+  401129:	49 89 c5             	mov    %rax,%r13
+  40112c:	4d 89 de             	mov    %r11,%r14
+  40112f:	4c 89 6d d8          	mov    %r13,-0x28(%rbp)
+  401133:	4c 89 75 f0          	mov    %r14,-0x10(%rbp)
+  401137:	eb 13                	jmp    40114c <fim_else>
+
+0000000000401139 <else_1>:
+  401139:	4d 39 f3             	cmp    %r14,%r11
+  40113c:	7d 0e                	jge    40114c <fim_else>
+  40113e:	49 89 c5             	mov    %rax,%r13
+  401141:	4d 89 de             	mov    %r11,%r14
+  401144:	4c 89 6d d8          	mov    %r13,-0x28(%rbp)
+  401148:	4c 89 75 f0          	mov    %r14,-0x10(%rbp)
+
+000000000040114c <fim_else>:
+  40114c:	48 8b 5d c0          	mov    -0x40(%rbp),%rbx
+  401150:	4c 01 db             	add    %r11,%rbx
+  401153:	48 89 5d e0          	mov    %rbx,-0x20(%rbp)
+  401157:	eb 86                	jmp    4010df <while>
+
+0000000000401159 <fim_while>:
+  401159:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+  40115d:	48 83 f8 00          	cmp    $0x0,%rax
+  401161:	75 29                	jne    40118c <else_2>
+  401163:	48 89 c3             	mov    %rax,%rbx
+  401166:	48 89 c1             	mov    %rax,%rcx
+  401169:	48 83 c1 08          	add    $0x8,%rcx
+  40116d:	48 89 c2             	mov    %rax,%rdx
+  401170:	48 83 c2 10          	add    $0x10,%rdx
+  401174:	48 c7 03 01 00 00 00 	movq   $0x1,(%rbx)
+  40117b:	48 89 5d d0          	mov    %rbx,-0x30(%rbp)
+  40117f:	48 89 4d c8          	mov    %rcx,-0x38(%rbp)
+  401183:	48 89 55 c0          	mov    %rdx,-0x40(%rbp)
+  401187:	e9 81 00 00 00       	jmp    40120d <fim_else2>
+
+000000000040118c <else_2>:
+  40118c:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+  401190:	48 89 c3             	mov    %rax,%rbx
+  401193:	48 89 c1             	mov    %rax,%rcx
+  401196:	48 83 c1 08          	add    $0x8,%rcx
+  40119a:	48 89 c2             	mov    %rax,%rdx
+  40119d:	48 83 c2 10          	add    $0x10,%rdx
+  4011a1:	4c 8b 7d e8          	mov    -0x18(%rbp),%r15
+  4011a5:	49 89 d2             	mov    %rdx,%r10
+  4011a8:	4d 01 e2             	add    %r12,%r10
+  4011ab:	4d 39 fa             	cmp    %r15,%r10
+  4011ae:	7e 4b                	jle    4011fb <fim_if4>
+  4011b0:	48 8b 7d f8          	mov    -0x8(%rbp),%rdi
+
+00000000004011b4 <while_2>:
+  4011b4:	4c 39 e7             	cmp    %r12,%rdi
+  4011b7:	7d 05                	jge    4011be <fim_while2>
+  4011b9:	48 d1 e7             	shl    $1,%rdi
+  4011bc:	eb f6                	jmp    4011b4 <while_2>
+
+00000000004011be <fim_while2>:
+  4011be:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+  4011c2:	4c 8b 75 b8          	mov    -0x48(%rbp),%r14
+  4011c6:	49 89 c0             	mov    %rax,%r8
+  4011c9:	48 c7 c0 0c 00 00 00 	mov    $0xc,%rax
+  4011d0:	0f 05                	syscall
+  4011d2:	49 89 c6             	mov    %rax,%r14
+  4011d5:	4c 89 75 b8          	mov    %r14,-0x48(%rbp)
+  4011d9:	4c 89 c0             	mov    %r8,%rax
+  4011dc:	49 83 fe ff          	cmp    $0xffffffffffffffff,%r14
+  4011e0:	75 19                	jne    4011fb <fim_if4>
+  4011e2:	48 c7 c7 3a 30 40 00 	mov    $0x40303a,%rdi
+  4011e9:	e8 22 fe ff ff       	call   401010 <printf@plt>
+  4011ee:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+  4011f5:	48 83 c4 48          	add    $0x48,%rsp
+  4011f9:	5d                   	pop    %rbp
+  4011fa:	c3                   	ret
+
+00000000004011fb <fim_if4>:
+  4011fb:	48 c7 03 01 00 00 00 	movq   $0x1,(%rbx)
+  401202:	4c 89 21             	mov    %r12,(%rcx)
+  401205:	4c 89 14 25 10 30 40 	mov    %r10,0x403010
+  40120c:	00 
+
+000000000040120d <fim_else2>:
+  40120d:	48 8b 45 c0          	mov    -0x40(%rbp),%rax
+  401211:	48 83 c4 48          	add    $0x48,%rsp
+  401215:	5d                   	pop    %rbp
+  401216:	c3                   	ret
+
+0000000000401217 <finalizaAlocador>:
+  401217:	55                   	push   %rbp
+  401218:	48 89 e5             	mov    %rsp,%rbp
+  40121b:	48 8b 04 25 08 30 40 	mov    0x403008,%rax
+  401222:	00 
+  401223:	48 89 c7             	mov    %rax,%rdi
+  401226:	48 c7 c0 0c 00 00 00 	mov    $0xc,%rax
+  40122d:	0f 05                	syscall
+  40122f:	48 c7 c7 4f 30 40 00 	mov    $0x40304f,%rdi
+  401236:	e8 d5 fd ff ff       	call   401010 <printf@plt>
+  40123b:	5d                   	pop    %rbp
+  40123c:	c3                   	ret
+
+000000000040123d <main>:
+  40123d:	55                   	push   %rbp
+  40123e:	48 89 e5             	mov    %rsp,%rbp
+  401241:	48 83 ec 08          	sub    $0x8,%rsp
+  401245:	e8 d6 fd ff ff       	call   401020 <iniciaAlocador>
+  40124a:	e8 c8 ff ff ff       	call   401217 <finalizaAlocador>
+  40124f:	48 83 c4 08          	add    $0x8,%rsp
+  401253:	48 c7 c0 3c 00 00 00 	mov    $0x3c,%rax
+  40125a:	0f 05                	syscall
