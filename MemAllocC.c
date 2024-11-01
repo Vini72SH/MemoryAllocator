@@ -4,6 +4,37 @@
 long int *topoInicialHeap;
 long int *ultimoBloco;
 
+// Função para depurar e imprimir o estado da memória
+void debug_memory() {
+    long int *current = topoInicialHeap; // Começa do topo inicial da heap
+    long int *end = ultimoBloco; // Limite atual da heap
+
+    printf("Estado da memória:\n");
+    printf("Endereço inicial       |  Tamanho do bloco         |  Status\n");
+    printf("-------------------------------------------------------------------\n");
+
+    while (current < end) {
+        // Verifica se o próximo bloco está dentro dos limites
+        if (current + 1 >= end) {
+            break;
+        }
+
+        long int tamanho_bloco = *(current + 1); // Tamanho do bloco
+        int status = (*current == 0) ? 1 : 0; // Status do bloco: 1 = livre, 0 = ocupado
+
+        printf("%8p         |  %8ld bytes           |  %s\n",
+               (void*)current, tamanho_bloco, status ? "Livre" : "Ocupado");
+
+        // Calcula o próximo bloco usando o tamanho atual e verifica se o avanço é seguro
+        long int *next_block = (long int*)((char*)current + 2 * sizeof(long int) + tamanho_bloco);
+        if (next_block >= end) {
+            break;
+        }
+        current = next_block;
+    }
+    printf("\n");
+}
+
 /* 
  * Iniciação do Alocador Dinãmico.
  * Armazena o endereço inicial da Heap.
@@ -23,6 +54,8 @@ void iniciaAlocador() {
  */
 void finalizaAlocador() {
     long int *topo, diff;
+
+    printf("Finalizando o alocador de memória.\n");
 
     topo = sbrk(0);
     diff = ((char *)topo - (char *)topoInicialHeap);
@@ -87,7 +120,7 @@ void *alocaMem(long int num_bytes) {
         basePointer = (long int *)((char *)melhorBloco + 2 * sizeof(long int));
         (*valido) = 1;
         diff = ((*tamanhoBloco) - num_bytes - 2 * sizeof(long int));
-        if (diff > 2 * sizeof(long int)) {
+        if (diff > (int)(2 * sizeof(long int))) {
             (*tamanhoBloco) = num_bytes;
             saltPointer = (long int *)((char *)basePointer + num_bytes);
             (*saltPointer) = 0;
@@ -128,34 +161,40 @@ int main () {
     x = alocaMem(100);
     if (x != NULL) {
         *x = 5;
-        printf("[%p]: %ld\n", x, *x);
+        //printf("[%p]: %ld\n", x, *x);
     }
     liberaMem(x);
 
-    y = alocaMem(50);
-    if (y != NULL) {
-        *y = 10;
-        printf("[%p]: %ld\n", y, *y);
-    }    
+    debug_memory();
 
-    z = alocaMem(34);
-    if (z != NULL) {
-        *z = 20;
-        printf("[%p]: %ld\n", z, *z);
+    for (int i = 0; i < 10; i++) {
+        x = alocaMem(sizeof(long int));
+        if (x != NULL) {
+            *x = 100;
+            //printf("[%p]: %ld\n", x, *x);
+        }
+
+        y = alocaMem(sizeof(long int));
+        if (y != NULL) {
+            *y = 200;
+            //printf("[%p]: %ld\n", y, *y);
+        }
+
+        z = alocaMem(sizeof(long int));
+        if (z != NULL) {
+            *z = 300;
+            //printf("[%p]: %ld\n", z, *z);
+        }
+
+        liberaMem(x);
+        liberaMem(y);
+        liberaMem(z);
     }
-
-    liberaMem(y);
-    liberaMem(z);
-
-    x = alocaMem(100);
-    if (x != NULL) {
-        *x = 5;
-        printf("[%p]: %ld\n", x, *x);
-    }
-    liberaMem(x);
+ 
+    debug_memory();
 
     newTop = sbrk(0);
-    printf("Diferença em Bytes: %ld\n", (char *)newTop - (char *)topoInicialHeap);
+    //printf("Diferença em Bytes: %ld\n", (char *)newTop - (char *)topoInicialHeap);
     finalizaAlocador();
 
     return 0;
