@@ -82,7 +82,10 @@ int liberaMem(void *bloco) {
  * Política: Best Fit.
  */
 void *alocaMem(long int num_bytes) {
-    
+    if (num_bytes <= 0) {
+        return NULL;
+    }
+
     int i, melhorTamanho, diff;
     long int *topo, *novoBloco, *melhorBloco, *saltPointer;
     long int *valido, *tamanhoBloco, *basePointer, *verificador;

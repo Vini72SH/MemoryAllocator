@@ -46,6 +46,15 @@ alocaMem:
     movq %rsp, %rbp
     subq $80, %rsp
 
+    movq 16(%rbp), %rax
+    cmpq $0, %rax
+    jg tamanho_valido   # Se num_bytes >= 1, o tamanho do bloco é válido
+    movq $0, %rax
+    addq $80, %rsp
+    popq %rbp
+    ret
+
+    tamanho_valido:
     movq $4096, -8(%rbp)    # i = 4096
     movq $0, %rdi
     movq $12, %rax
