@@ -256,14 +256,71 @@ finalizaAlocador:
     ret                 # Retorna o fluxo do programa.
 
 imprimeMapa:
-    # tam -> %r8
-    # *novoBloco -> %r9
-    # *valido -> %r10
-    # *tamanhoBloco -> %r11
-    # *basePointer -> %r12
+    # *novoBloco -> %rax
+    # *ultimoBloco -> %rbx
+    #  tam -> %r12
+    # *valido -> %r13
+    # *tamanhoBloco -> %r14
+    # *basePointer -> %r15
 
     pushq %rbp
     movq %rsp, %rbp
+    subq $16, %rsp
 
+    movq topoInicialHeap, %rax
+    movq ultimoBloco, %rbx
+
+    whileImprime:
+    cmpq %rbx, %rax
+    jge fora_whileImprime
+    movq %rax, %r13         # Valido
+    movq %rax, %r14
+    addq $8, %r14           # tamanhoBloco = novoBloco + 8
+    movq %rax, %r15
+    addq $16, %r15          # basePointer = novoBloco + 16
+    movq %r15, -8(%rbp)
+    movq $0, %r8
+
+    forTags:
+    cmpq $16, %r8           # i < 16
+    jge fora_forTags
+    movq $strHashtag, %rdi  # Imprime "#"
+    call printf
+    addq $1, %r8
+    jmp forTags
+    fora_forTags:
+
+    movq (%r14), %r12      # tam = *tamanhoBloco
+    movq (%r13), %rdx      # %rdx = *valido
+    cmpq $1, %rdx          # %rdx == 1 // Imprime "+" ou "-"
+    jne elseImprime
+    movq $strMais, %r15
+    jmp fora_elseImprime
+    elseImprime:
+    movq $strMenos, %r15
+    fora_elseImprime:
+
+    movq $0, %r8           # %r8 = 0
+    forChar:
+    cmpq %r12, %r8         # %r8 < *tamanhoBloco
+    jge fora_forChar
+    movq %r15, %rdi
+    call printf            # Imprime as informações
+    addq $1, %r8
+    jmp forChar
+    fora_forChar:
+
+    movq -8(%rbp), %r15    # Restaura o basePointer
+
+    movq %r15, %rax        # Salta para o próximo bloco
+    addq %r12, %rax
+
+    jmp whileImprime
+    fora_whileImprime:
+
+    movq $strDoubleBreak, %rdi  # Imprime "\n\n"
+    call printf
+
+    addq $16, %rsp
     popq %rbp
     ret
