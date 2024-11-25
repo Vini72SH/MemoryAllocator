@@ -154,6 +154,36 @@ void *alocaMem(long int num_bytes) {
 
     return basePointer; 
 };
+ 
+void imprimeMapa() {
+    long int tam;
+    long int *novoBloco, *valido, *tamanhoBloco, *basePointer;
+
+    novoBloco = topoInicialHeap;
+    while ((char *)novoBloco < (char *)ultimoBloco) {
+        valido = novoBloco;
+        tamanhoBloco = (long int *)((char *)novoBloco + sizeof(long int));
+        basePointer = (long int *)((char *)novoBloco + 2 * sizeof(long int));
+
+        for (int i = 0; i < 16; ++i) {
+            printf("#");
+        }
+
+        tam = (*tamanhoBloco);
+        if ((*valido) == 1) {
+            for (int i = 0; i < tam; ++i) {
+                printf("+");
+            }
+        } else {
+            for (int i = 0; i < tam; ++i) {
+                printf("-");
+            }
+        }
+
+        novoBloco = (long int *)((char *)basePointer + tam);
+    }
+    printf("\n\n");
+}
 
 int main () {
     long int *x, *y, *z, *newTop;
@@ -166,9 +196,10 @@ int main () {
         *x = 5;
         //printf("[%p]: %ld\n", x, *x);
     }
+
     liberaMem(x);
 
-    debug_memory();
+    imprimeMapa();
 
     for (int i = 0; i < 10; i++) {
         x = alocaMem(sizeof(long int));
@@ -189,12 +220,14 @@ int main () {
             //printf("[%p]: %ld\n", z, *z);
         }
 
+        imprimeMapa();
+
         liberaMem(x);
         liberaMem(y);
         liberaMem(z);
     }
  
-    debug_memory();
+    imprimeMapa();
 
     newTop = sbrk(0);
     //printf("Diferença em Bytes: %ld\n", (char *)newTop - (char *)topoInicialHeap);
