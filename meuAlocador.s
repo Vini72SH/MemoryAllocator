@@ -23,7 +23,7 @@ iniciaAlocador:
     subq $8, %rsp       # Espaço para o ponteiro topo.
 
     movq $str1, %rdi    # Carregamento da String.
-    call printf         # Chamada do printf.
+    # call printf         # Chamada do printf.
 
     movq $12, %rax
     movq $0, %rdi       # Recebe o endereço do topo da pilha.
@@ -76,53 +76,47 @@ alocaMem:
     movq -32(%rbp), %rax    # %rax = novoBloco
     movq ultimoBloco, %rbx  # %rbx = ultimoBloco
 
+    # %rax = novoBloco
+    # %rbx = ultimoBloco
+    # %r13 = valido
+    # %r14 = tamanhoBloco
+    # %r15 = basePointer 
     while:
-    cmpq %rax, %rbx         # novoBloco < ultimoBloco
+    cmpq %rbx, %rax         # novoBloco < ultimoBloco
     jge fim_while
+    movq %rax, %r13         # valido = novoBloco
+    movq %rax, %r14 
+    addq $8, %r14           # tamanhoBloco = novoBloco + 8
+    movq %rax, %r15
+    addq $16, %r15          # basePointer = novoBloco + 16
+    
+    cmpq $0, (%r13)         # *valido == 0
+    jne foraIfValido
+    movq -88(%rbp), %r12    
+    cmpq %r12, (%r14)       # (*tamanhoBloco) >= num_bytes
+    jl foraIfTamNum
+    movq -40(%rbp), %r12
+    cmpq $0, %r12           # melhorBloco == NULL
+    jne elseMelhorBloco
+    movq %rax, -40(%rbp)    # Se melhorBloco não existe, salva o bloco atual
+    movq (%r14), %r12
+    movq %r12, -16(%rbp)    # Salva o tamanho do bloco atual
+    jmp foraIfTamNum
+    elseMelhorBloco:
+    movq (%r14), %r12
+    movq -16(%rbp), %rcx
+    cmpq %r12, %rcx         # (*tamanhoBloco) < melhorTamanho
+    jge foraIfBlocoTam
+    movq %rax, -40(%rbp)    # Se o bloco atual é melhor, o salva no lugar   
+    movq %r12, -16(%rbp)
+    foraIfBlocoTam:
+    foraIfTamNum:
+    foraIfValido:
 
-    movq -32(%rbp), %rax    # %rax = novoBloco
-    movq %rax, -48(%rbp)    # valido = novoBloco
-    movq %rax, %rbx     
-    addq $8, %rbx
-    movq %rbx, -56(%rbp)    # tamanhoBloco = novoBloco + 8
-    movq %rax, %rbx
-    addq $16, %rbx
-    movq %rbx, -64(%rbp)    # basePointer = novoBloco + 16    
-
-    movq -48(%rbp), %r8     # %r8 = valido
-    movq (%r8), %r9         # %r9 = *valido
-
-    movq -56(%rbp), %r10    # %r10 = tamanhoBloco
-    movq (%r10), %r11       # %r11 = *tamanhoBloco
-
-    movq -40(%rbp), %r13    # %r13 = melhorBloco
-    movq -16(%rbp), %r14    # %r14 = melhorTamanho
-
-    cmpq $0, %r9    # (*valido) == 0
-    jne fim_if1
-    cmpq %r12, %r11 # (*tamanhoBloco) >= num_bytes
-    jl fim_if2
-    cmpq $0, %r13  # melhorBloco == NULL
-    jne else_1
-    movq %rax, %r13 # melhorBloco = novoBloco
-    movq %r11, %r14 # melhorTamanho = *tamanhoBloco
-    movq %r13, -40(%rbp)
-    movq %r14, -16(%rbp)
-    jmp fim_else  
-    else_1:
-    cmpq %r14, %r11 # (*tamanhoBloco) < melhorTamanho
-    jge fim_if3
-    movq %rax, %r13 # melhorBloco = novoBloco
-    movq %r11, %r14 # melhorTamanho = *tamanhoBloco
-    movq %r13, -40(%rbp)
-    movq %r14, -16(%rbp)
-    fim_if3:
-    fim_else:
-    fim_if2:
-    fim_if1:
-    movq -64(%rbp), %rbx    # %rbx = basePointer
-    addq %r11, %rbx         # %rbx = basePointer + *tamanhoBloco
-    movq %rbx, -32(%rbp)    # novoBloco = basePointer + *tamanhoBloco
+    movq (%r14), %r12
+    movq %r15, %rax
+    addq %r12, %rax
+    movq %rax, -32(%rbp)
 
     jmp while
     fim_while:
@@ -250,7 +244,7 @@ finalizaAlocador:
     syscall
 
     movq $str3, %rdi
-    call printf
+    # call printf
 
     popq %rbp           # Restaura o antigo RA.
     ret                 # Retorna o fluxo do programa.
