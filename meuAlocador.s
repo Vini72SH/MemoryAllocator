@@ -23,7 +23,7 @@ iniciaAlocador:
     subq $8, %rsp       # Espaço para o ponteiro topo.
 
     movq $str1, %rdi    # Carregamento da String.
-    # call printf         # Chamada do printf.
+    call printf         # Chamada do printf.
 
     movq $12, %rax
     movq $0, %rdi       # Recebe o endereço do topo da pilha.
@@ -244,7 +244,7 @@ finalizaAlocador:
     syscall
 
     movq $str3, %rdi
-    # call printf
+    call printf
 
     popq %rbp           # Restaura o antigo RA.
     ret                 # Retorna o fluxo do programa.
