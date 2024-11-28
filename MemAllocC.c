@@ -123,7 +123,7 @@ void *alocaMem(long int num_bytes) {
         basePointer = (long int *)((char *)melhorBloco + 2 * sizeof(long int));
         (*valido) = 1;
         diff = ((*tamanhoBloco) - num_bytes - 2 * sizeof(long int));
-        if (diff > (int)(2 * sizeof(long int))) {
+        if (diff > 0) {
             (*tamanhoBloco) = num_bytes;
             saltPointer = (long int *)((char *)basePointer + num_bytes);
             (*saltPointer) = 0;
@@ -141,6 +141,7 @@ void *alocaMem(long int num_bytes) {
             }
 
             verificador = sbrk(i);
+
             if (verificador == (long int *)-1) {
                 printf("Falha na alocação!\n");
                 return NULL;
@@ -191,46 +192,23 @@ int main () {
     iniciaAlocador();
     printf("Topo da Heap: %p\n\n", topoInicialHeap);
 
-    x = alocaMem(100);
+    x = alocaMem(4081);
     if (x != NULL) {
         *x = 5;
         //printf("[%p]: %ld\n", x, *x);
     }
 
-    liberaMem(x);
-
     imprimeMapa();
 
-    for (int i = 0; i < 10; i++) {
-        x = alocaMem(sizeof(long int));
-        if (x != NULL) {
-            *x = 100;
-            //printf("[%p]: %ld\n", x, *x);
-        }
+    y = alocaMem(10);
 
-        y = alocaMem(sizeof(long int));
-        if (y != NULL) {
-            *y = 200;
-            //printf("[%p]: %ld\n", y, *y);
-        }
+    liberaMem(x);
+    liberaMem(y);
 
-        z = alocaMem(sizeof(long int));
-        if (z != NULL) {
-            *z = 300;
-            //printf("[%p]: %ld\n", z, *z);
-        }
-
-        imprimeMapa();
-
-        liberaMem(x);
-        liberaMem(y);
-        liberaMem(z);
-    }
- 
     imprimeMapa();
 
     newTop = sbrk(0);
-    //printf("Diferença em Bytes: %ld\n", (char *)newTop - (char *)topoInicialHeap);
+    printf("Diferença em Bytes: %ld\n", (char *)newTop - (char *)topoInicialHeap);
     finalizaAlocador();
 
     return 0;

@@ -137,11 +137,11 @@ alocaMem:
     movq %rcx, -56(%rbp)
     movq %rdx, -64(%rbp)
     movq (%rcx), %rax       # %rax = *tamanhoBloco
-    movq -88(%rbp), %rbx     # %rbx = num_bytes
+    movq -88(%rbp), %rbx    # %rbx = num_bytes
     subq %rbx, %rax         # %rax = *tamanhoBloco - num_bytes
     subq $16, %rax          # %rax = *tamanhoBloco - num_bytes - 16
     movq %rax, -80(%rbp)
-    cmpq $16, %rax          # diff > 2 * sizeof(long int)
+    cmpq $0, %rax           # diff > 0
     jle fim_else2
 
     movq -56(%rbp), %rcx    # %rcx = tamanhoBloco
@@ -161,7 +161,7 @@ alocaMem:
     addq $8, %rcx           # tamanhoBloco = novoBloco + 8
     movq %rax, %rdx         # basePointer = novoBloco
     addq $16, %rdx          # basePointer = novoBloco + 16
-    movq -88(%rbp), %r12     # %r12 = num_bytes
+    movq -88(%rbp), %r12    # %r12 = num_bytes
     movq -24(%rbp), %r15    # %r15 = topo
     movq %rdx, %r10         # %r10 = basePointer
     addq %r12, %r10         # %r10 = basePointer + num_bytes
