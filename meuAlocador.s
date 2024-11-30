@@ -55,10 +55,10 @@ alocaMem:
     movq %rsp, %rbp
     subq $88, %rsp
 
-    movq %rdi, -88(%rbp)
+    movq %rdi, -88(%rbp)    # Armazena num_bytes 
     movq %rdi, %rax
     cmpq $0, %rax
-    jg tamanho_valido   # Se num_bytes >= 1, o tamanho do bloco é válido
+    jg tamanho_valido       # Se num_bytes >= 1, o tamanho do bloco é válido
     movq $0, %rax
     addq $88, %rsp
     popq %rbp
@@ -81,9 +81,9 @@ alocaMem:
     # %r13 = valido
     # %r14 = tamanhoBloco
     # %r15 = basePointer 
-    while:
+    whileBuscaBloco:
     cmpq %rbx, %rax         # novoBloco < ultimoBloco
-    jge fim_while
+    jge fimWhileBuscaBloco
     movq %rax, %r13         # valido = novoBloco
     movq %rax, %r14 
     addq $8, %r14           # tamanhoBloco = novoBloco + 8
@@ -94,14 +94,14 @@ alocaMem:
     jne foraIfValido
     movq -88(%rbp), %r12    
     cmpq %r12, (%r14)       # (*tamanhoBloco) >= num_bytes
-    jl foraIfTamNum
+    jl foraIfBlocoNum
     movq -40(%rbp), %r12
     cmpq $0, %r12           # melhorBloco == NULL
     jne elseMelhorBloco
     movq %rax, -40(%rbp)    # Se melhorBloco não existe, salva o bloco atual
     movq (%r14), %r12
     movq %r12, -16(%rbp)    # Salva o tamanho do bloco atual
-    jmp foraIfTamNum
+    jmp foraIfBlocoNum
     elseMelhorBloco:
     movq (%r14), %r12
     movq -16(%rbp), %rcx
@@ -110,23 +110,23 @@ alocaMem:
     movq %rax, -40(%rbp)    # Se o bloco atual é melhor, o salva no lugar   
     movq %r12, -16(%rbp)
     foraIfBlocoTam:
-    foraIfTamNum:
+    foraIfBlocoNum:
     foraIfValido:
 
-    movq (%r14), %r12
-    movq %r15, %rax
-    addq %r12, %rax
-    movq %rax, -32(%rbp)
+    movq (%r14), %r12       # %r12 = (*tamanhoBloco)
+    movq %r15, %rax         # %rax = basePointer
+    addq %r12, %rax         # %rax = basePointer + (*tamanhoBloco)
+    movq %rax, -32(%rbp)    # novoBloco = %rax
 
-    jmp while
-    fim_while:
+    jmp whileBuscaBloco
+    fimWhileBuscaBloco:
 
-    movq -40(%rbp), %rax # %rax = melhorBloco
     # %rbx = valido
     # %rcx = tamanhoBloco
     # %rdx = basePointer
+    movq -40(%rbp), %rax    # %rax = melhorBloco
     cmpq $0, %rax           # melhorBloco != NULL
-    je else_2
+    je melhorBlocoNull
     movq %rax, %rbx         # valido = melhorBloco
     movq %rax, %rcx         # tamanhoBloco = melhorBloco
     addq $8, %rcx           # tamanhoBloco = melhorBloco + 8
@@ -142,7 +142,7 @@ alocaMem:
     subq $16, %rax          # %rax = *tamanhoBloco - num_bytes - 16
     movq %rax, -80(%rbp)
     cmpq $0, %rax           # diff > 0
-    jle fim_else2
+    jle retornaMelhorBloco
 
     movq -56(%rbp), %rcx    # %rcx = tamanhoBloco
     movq %rbx, (%rcx)       # (*tamanhoBloco) = num_bytes
@@ -152,9 +152,9 @@ alocaMem:
     addq $8, %rax
     movq -80(%rbp), %rbx
     movq %rbx, (%rax)       # (*proxBlocoTamanho) = diff
-
-    jmp fim_else2
-    else_2:
+    jmp retornaMelhorBloco
+    
+    melhorBlocoNull:
     movq -32(%rbp), %rax    # %rax = novoBloco
     movq %rax, %rbx         # valido = novoBloco
     movq %rax, %rcx         # tamanhoBloco = novoBloco
@@ -169,15 +169,16 @@ alocaMem:
     movq %rcx, -56(%rbp)
     movq %rdx, -64(%rbp)
     cmpq %r15, %r10         # basePointer + num_bytes > topo 
-    jle fim_if4
-    movq -8(%rbp), %rdi     # %rdi = i
-    while_2:
+    jle naoAumentaHeap
+
+    movq -8(%rbp), %rdi     # %rdi = i (4096)
+    whileDefineAumento:
     cmpq %r12, %rdi         # i < num_bytes
-    jge fim_while2
+    jge fimWhileDefineAumento
     shl $1, %rdi            # i = i << 1
-    jmp while_2
-    fim_while2:
-    movq %rdi, -8(%rbp)     
+    jmp whileDefineAumento
+    fimWhileDefineAumento:
+    movq %rdi, -8(%rbp)     # i = %rdi
     movq %rdi, %r8          # %r8 = i
 
     # %r14 = verificador
@@ -185,26 +186,27 @@ alocaMem:
     addq %r8, %rdi          # %rdi = topo + i    
     movq %rax, %r8          # %r8 = %rax
     movq $12, %rax          
-    syscall                 # syscall brk
+    syscall                 # syscall brk (Aumenta a Heap em i Bytes)
 
-    movq %rax, %r14         # %verificador = %rax
-    movq %r14, -72(%rbp)     
+    movq %rax, %r14         # %verificador = %rax 
     movq %r8, %rax          # %rax = %r8
     cmpq $-1, %r14          # verificador == -1
-    jne fim_if5
+    jne foiPossivelAlocarBloco
+    
     movq $str2, %rdi        # Mensagem de erro.
     call printf
     movq $0, %rdi
     addq $88, %rsp          # Desaloca as variáveis locais.
     popq %rbp               # Restaura o antigo RA.
     ret                     # Retorna o fluxo do programa.
-    fim_if5:
-    fim_if4:
-    movq -56(%rbp), %rcx
-    movq $1, (%rbx)
-    movq %r12, (%rcx)
-    movq %r10, ultimoBloco
-    fim_else2:
+
+    foiPossivelAlocarBloco:
+    naoAumentaHeap:
+    movq -56(%rbp), %rcx    # %rcx = tamanhoBloco
+    movq $1, (%rbx)         # *valido = 1
+    movq %r12, (%rcx)       # *tamanhoBloco = num_bytes
+    movq %r10, ultimoBloco  # ultimoBloco = basePointer + num_bytes
+    retornaMelhorBloco:
     movq -64(%rbp), %rax    # retorna o basePointer
     addq $88, %rsp          # Desaloca as variáveis locais.
     popq %rbp               # Restaura o antigo RA.
@@ -217,15 +219,15 @@ liberaMem:
 
     movq %rdi, %rax     # (*bloco) mapeado em %rax
     cmpq $0, %rax       # Verificação se é válido.
-    je else
-    movq %rax, %rbx     
+    je elseBlocoNull
+    movq %rax, %rbx     # %rbx = bloco 
     subq $16, %rbx      # Armazena o endereço do metadado de validez;
     movq $0, (%rbx)     # Define que o bloco está livre.
 
     movq $1, %rbx       # Retorna 1, em sucesso.
     jmp exit
     
-    else:
+    elseBlocoNull:
     movq $0, %rbx       # Retorna 0, em falha. (Bloco NULL)
     
     exit:
@@ -265,16 +267,16 @@ imprimeMapa:
     movq ultimoBloco, %rbx
 
     whileImprime:
-    cmpq %rbx, %rax
+    cmpq %rbx, %rax         # novoBloco < ultimoBloco
     jge fora_whileImprime
-    movq %rax, %r13         # Valido
+    movq %rax, %r13         # Valido = novoBloco
     movq %rax, %r14
     addq $8, %r14           # tamanhoBloco = novoBloco + 8
     movq %rax, %r15
     addq $16, %r15          # basePointer = novoBloco + 16
     movq %r15, -8(%rbp)
-    movq $0, %r8
 
+    movq $0, %r8
     forTags:
     cmpq $16, %r8           # i < 16
     jge fora_forTags

@@ -49,33 +49,6 @@ void iniciaAlocador() {
 };
 
 /*
- * Finalização do Alocador.
- * Restaura a altura inicial da Heap.
- */
-void finalizaAlocador() {
-    long int *topo, diff;
-
-    printf("Finalizando o alocador de memória.\n");
-
-    topo = sbrk(0);
-    diff = ((char *)topo - (char *)topoInicialHeap);
-    sbrk(-diff);
-};
-
-int liberaMem(void *bloco) {
-    char *valido;
-    
-    if (bloco != NULL) {
-        valido = ((char *)bloco - 2 * sizeof(long int));
-        *valido = 0;
-
-        return 1;
-    }
-
-    return 0;
-}
-
-/*
  * Gerenciador de Alocações de Memória.
  * Verifica o tamanho da alocação.
  * Insere metadados referente aos blocos alocados.
@@ -141,7 +114,6 @@ void *alocaMem(long int num_bytes) {
             }
 
             verificador = sbrk(i);
-
             if (verificador == (long int *)-1) {
                 printf("Falha na alocação!\n");
                 return NULL;
@@ -155,7 +127,34 @@ void *alocaMem(long int num_bytes) {
 
     return basePointer; 
 };
- 
+
+int liberaMem(void *bloco) {
+    char *valido;
+    
+    if (bloco != NULL) {
+        valido = ((char *)bloco - 2 * sizeof(long int));
+        *valido = 0;
+
+        return 1;
+    }
+
+    return 0;
+}
+
+/*
+ * Finalização do Alocador.
+ * Restaura a altura inicial da Heap.
+ */
+void finalizaAlocador() {
+    long int *topo, diff;
+
+    printf("Finalizando o alocador de memória.\n");
+
+    topo = sbrk(0);
+    diff = ((char *)topo - (char *)topoInicialHeap);
+    sbrk(-diff);
+};
+
 void imprimeMapa() {
     long int tam;
     long int *novoBloco, *valido, *tamanhoBloco, *basePointer;
