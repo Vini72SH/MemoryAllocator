@@ -10,9 +10,9 @@ DEBUG = -g
 all: exec
 
 exec: 
-	$(GCC) -c exemplo.c $(DEBUG) 
+	$(GCC) -c avalia.c $(DEBUG) 
 	$(AS) -o meuAlocador.o meuAlocador.s $(DEBUG)
-	$(LD) exemplo.o meuAlocador.o -o MeuAlocador $(LD_FLAGS) $(DEBUG)
+	$(LD) avalia.o meuAlocador.o -o MeuAlocador $(LD_FLAGS) $(DEBUG)
 
 clean:
 	rm -f *.o

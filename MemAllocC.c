@@ -62,7 +62,7 @@ void *alocaMem(long int num_bytes) {
     int i, melhorTamanho, diff;
     long int *topo, *novoBloco, *melhorBloco, *saltPointer;
     long int *valido, *tamanhoBloco, *basePointer, *verificador;
-
+    
     i = 4096;
     topo = sbrk(0);
     melhorTamanho = 0;
@@ -108,21 +108,28 @@ void *alocaMem(long int num_bytes) {
         tamanhoBloco = (long int *)((char *)novoBloco + sizeof(long int));
         basePointer = (long int *)((char *)novoBloco + 2 * sizeof(long int));
 
-        if ((char *)basePointer + num_bytes > (char *)topo) {
-            while (i < num_bytes) {
-                i = i << 1;
-            }
+        while (i < num_bytes) {
+            i = i << 1;
+        }
 
-            verificador = sbrk(i);
-            if (verificador == (long int *)-1) {
-                printf("Falha na alocação!\n");
-                return NULL;
-            }
+        int aumento = i + 2 * sizeof(long int);
+        verificador = sbrk(aumento);
+        if (verificador == (long int *)-1) {
+            printf("Falha na alocação!\n");
+            return NULL;
         }
 
         (*valido) = 1;
-        (*tamanhoBloco) = num_bytes;
-        ultimoBloco = (long int *)((char *)basePointer + num_bytes);
+        (*tamanhoBloco) = i;
+        ultimoBloco = (long int *)((char *)basePointer + i);
+        diff = ((*tamanhoBloco) - num_bytes - 2 * sizeof(long int));
+        if (diff > 0) {
+            (*tamanhoBloco) = num_bytes;
+            saltPointer = (long int *)((char *)basePointer + num_bytes);
+            (*saltPointer) = 0;
+            saltPointer = (long int *)((char *)saltPointer + sizeof(long int));
+            (*saltPointer) = diff;
+        }
     }
 
     return basePointer; 
@@ -186,28 +193,49 @@ void imprimeMapa() {
 }
 
 int main () {
-    long int *x, *y, *z, *newTop;
+    void *a,*b,*c,*d,*e;
 
-    iniciaAlocador();
-    printf("Topo da Heap: %p\n\n", topoInicialHeap);
-
-    x = alocaMem(4081);
-    if (x != NULL) {
-        *x = 5;
-        //printf("[%p]: %ld\n", x, *x);
-    }
-
+    iniciaAlocador(); 
     imprimeMapa();
+    // 0) estado inicial
 
-    y = alocaMem(10);
-
-    liberaMem(x);
-    liberaMem(y);
-
+    a=(void *) alocaMem(100);
     imprimeMapa();
+    b=(void *) alocaMem(130);
+    imprimeMapa();
+    c=(void *) alocaMem(120);
+    imprimeMapa();
+    d=(void *) alocaMem(110);
+    imprimeMapa();
+    // 1) Espero ver quatro segmentos ocupados
 
-    newTop = sbrk(0);
-    printf("Diferença em Bytes: %ld\n", (char *)newTop - (char *)topoInicialHeap);
+    liberaMem(b);
+    imprimeMapa(); 
+    liberaMem(d);
+    imprimeMapa(); 
+    // 2) Espero ver quatro segmentos alternando
+    //    ocupados e livres
+
+    b=(void *) alocaMem(50);
+    imprimeMapa();
+    d=(void *) alocaMem(90);
+    imprimeMapa();
+    e=(void *) alocaMem(40);
+    imprimeMapa();
+    // 3) Deduzam
+        
+    liberaMem(c);
+    imprimeMapa(); 
+    liberaMem(a);
+    imprimeMapa();
+    liberaMem(b);
+    imprimeMapa();
+    liberaMem(d);
+    imprimeMapa();
+    liberaMem(e);
+    imprimeMapa();
+    // 4) volta ao estado inicial
+
     finalizaAlocador();
 
     return 0;

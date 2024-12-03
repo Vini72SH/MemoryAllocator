@@ -103,9 +103,9 @@ alocaMem:
     movq %r12, -16(%rbp)    # Salva o tamanho do bloco atual
     jmp foraIfBlocoNum
     elseMelhorBloco:
-    movq (%r14), %r12
-    movq -16(%rbp), %rcx
-    cmpq %r12, %rcx         # (*tamanhoBloco) < melhorTamanho
+    movq (%r14), %r12       # %r12 = (*tamanhoBloco)
+    movq -16(%rbp), %rcx    # %rcx = melhorTamanho
+    cmpq %rcx, %r12         # (*tamanhoBloco) < melhorTamanho
     jge foraIfBlocoTam
     movq %rax, -40(%rbp)    # Se o bloco atual é melhor, o salva no lugar   
     movq %r12, -16(%rbp)
@@ -168,8 +168,6 @@ alocaMem:
     movq %rbx, -48(%rbp)
     movq %rcx, -56(%rbp)
     movq %rdx, -64(%rbp)
-    cmpq %r15, %r10         # basePointer + num_bytes > topo 
-    jle naoAumentaHeap
 
     movq -8(%rbp), %rdi     # %rdi = i (4096)
     whileDefineAumento:
@@ -180,6 +178,7 @@ alocaMem:
     fimWhileDefineAumento:
     movq %rdi, -8(%rbp)     # i = %rdi
     movq %rdi, %r8          # %r8 = i
+    addq $16, %r8           # %r8 = i + 16
 
     # %r14 = verificador
     movq -24(%rbp), %rdi    # %rdi = topo
@@ -191,7 +190,7 @@ alocaMem:
     movq %rax, %r14         # %verificador = %rax 
     movq %r8, %rax          # %rax = %r8
     cmpq $-1, %r14          # verificador == -1
-    jne foiPossivelAlocarBloco
+    jne foiPossivelAumentarHeap
     
     movq $str2, %rdi        # Mensagem de erro.
     call printf
@@ -200,12 +199,32 @@ alocaMem:
     popq %rbp               # Restaura o antigo RA.
     ret                     # Retorna o fluxo do programa.
 
-    foiPossivelAlocarBloco:
-    naoAumentaHeap:
-    movq -56(%rbp), %rcx    # %rcx = tamanhoBloco
-    movq $1, (%rbx)         # *valido = 1
-    movq %r12, (%rcx)       # *tamanhoBloco = num_bytes
-    movq %r10, ultimoBloco  # ultimoBloco = basePointer + num_bytes
+    foiPossivelAumentarHeap:
+    # diff = %r12
+    movq -8(%rbp), %r10     # %r10 = i
+    movq -88(%rbp), %r11    # %r11 = num_bytes
+    movq -48(%rbp), %rax    # %rax = valido
+    movq -56(%rbp), %rbx    # %rbx = tamanhoBloco
+    movq -64(%rbp), %r15    # %r15 = basePointer
+
+    movq $1, (%rax)         # (*valido) = 1
+    movq %r10, (%rbx)       # (*tamanhoBloco) = i
+    movq %r15, ultimoBloco  # ultimoBloco = basePointer
+    addq %r10, ultimoBloco  # ultimoBloco = basePointer + i
+
+    movq %r10, %r12         # %r12 = i
+    subq %r11, %r12         # %r12 = i - num_bytes
+    subq $16, %r12          # %r12 = i - num_bytes - 16
+    cmpq $0, %r12           # diff > 0
+    jle retornaMelhorBloco
+    # %r13 = saltPointer
+    movq %r11, (%rbx)       # (*tamanhoBloco) = num_bytes
+    movq %r15, %r13         # %r13 = basePointer
+    addq %r11, %r13         # %r13 = basePointer + num_bytes => Valido do proximo bloco
+    movq $0, (%r13)         # (%r13) = 0 | valido = 0
+    addq $8, %r13           # %r13 + 8 => tamanhoBloco do proximo bloco
+    movq %r12, (%r13)       # tamanhoBloco do prox = diff 
+
     retornaMelhorBloco:
     movq -64(%rbp), %rax    # retorna o basePointer
     addq $88, %rsp          # Desaloca as variáveis locais.
