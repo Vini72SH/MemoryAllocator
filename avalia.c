@@ -1,7 +1,6 @@
-#include <stdio.h>
 #include "meuAlocador.h"
 
-int main (long int argc, char** argv) {
+int main (int argc, char** argv) {
   void *a,*b,*c,*d,*e;
 
   iniciaAlocador(); 
@@ -46,4 +45,6 @@ int main (long int argc, char** argv) {
    // 4) volta ao estado inicial
 
   finalizaAlocador();
+
+  return 0;
 }
